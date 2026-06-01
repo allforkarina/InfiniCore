@@ -13,16 +13,14 @@ from framework import (
     is_broadcast,
 )
 
-# Test cases format: (shape, dims_tuple, input_strides_or_None)
-# infinicore.flip(input, dims)
-
 _TEST_CASES_DATA = [
-    ((13, 4), (0,), None),
-    ((8, 16), (1,), (128, 1)),
-    ((2, 3, 4), (2,), None),
-    ((4, 5, 6), (0, 2), None),
-    ((16, 64), (0, 1), None),
-    ((2, 2, 3, 4), (1, 3), None),
+    ((10,), 3, 0, None),
+    ((4, 8), 2, 1, None),
+    ((4, 8), 2, 1, (64, 1)),
+    ((2, 3, 4), 1, 0, None),
+    ((2, 3, 4), 2, 2, None),
+    ((16, 64), 8, 0, None),
+    ((8, 16, 32), 5, 1, None),
 ]
 
 _TOLERANCE_MAP = {
@@ -37,56 +35,44 @@ _TENSOR_DTYPES = [infinicore.float16, infinicore.bfloat16, infinicore.float32]
 def parse_test_cases():
     test_cases = []
     for data in _TEST_CASES_DATA:
-        shape, dims = data[0], data[1]
-        in_strides = data[2] if len(data) > 2 else None
-
-        supports_inplace = not is_broadcast(in_strides)
+        shape, shifts, dims = data[0], data[1], data[2]
+        in_strides = data[3] if len(data) > 3 else None
 
         for dtype in _TENSOR_DTYPES:
             tol = _TOLERANCE_MAP.get(dtype, {"atol": 0, "rtol": 1e-4})
             in_spec = TensorSpec.from_tensor(shape, in_strides, dtype)
 
-            kwargs = {"dims": dims}
+            kwargs = {"shifts": shifts, "dims": dims}
             test_cases.append(
                 TestCase(
                     inputs=[in_spec],
                     kwargs=kwargs,
-                    output_spec=None,
-                    comparison_target=None,
                     tolerance=tol,
-                    description=f"flip - OUT_OF_PLACE",
+                    description=f"roll({shape}, shifts={shifts}, dims={dims}) - OUT_OF_PLACE",
                 )
             )
-
-            # infinicore.flip has no explicit out or inplace flag; skip in-place/out variants.
 
     return test_cases
 
 
 class OpTest(BaseOperatorTest):
-    """Flip operator test with simplified implementation"""
+    """Roll operator test."""
 
     def __init__(self):
-        super().__init__("Flip")
+        super().__init__("Roll")
 
     def get_test_cases(self):
         return parse_test_cases()
 
     def torch_operator(self, *args, **kwargs):
-        # dims = kwargs.pop("dims", None)
-        # if dims is not None:
-        #     return infinicore.flip(*args, dims)
-        return torch.flip(*args, **kwargs)
+        return torch.roll(*args, **kwargs)
 
     def infinicore_operator(self, *args, **kwargs):
-        """InfiniCore implementation."""
         import infinicore.nn.functional as F
-        dims = kwargs.pop("dims", None)
-        return F.flip(*args, dims)
+        return F.roll(*args, **kwargs)
 
 
 def main():
-    """Main entry point"""
     runner = GenericTestRunner(OpTest)
     runner.run_and_exit()
 

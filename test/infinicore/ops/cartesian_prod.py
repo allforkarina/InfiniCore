@@ -10,19 +10,15 @@ from framework import (
     TensorSpec,
     TestCase,
     GenericTestRunner,
-    is_broadcast,
 )
 
-# Test cases format: (shape, input_strides_or_None)
-# infinicore.fliplr(input) flips the left/right (dim=-1 for 2D-like tensors)
-
 _TEST_CASES_DATA = [
-    ((13, 4), None),
-    ((8, 16), (128, 1)),
-    ((2, 3, 4), None),
-    ((4, 5), None),
-    ((16, 64), None),
-    ((3, 4, 5), (60, 20, 4)),
+    ([(3,), (4,)],),
+    ([(2,), (5,)],),
+    ([(3,), (3,), (3,)],),
+    ([(4,), (6,)],),
+    ([(2,), (2,), (2,)],),
+    ([(5,), (8,)],),
 ]
 
 _TOLERANCE_MAP = {
@@ -31,29 +27,26 @@ _TOLERANCE_MAP = {
     infinicore.bfloat16: {"atol": 0, "rtol": 5e-2},
 }
 
-_TENSOR_DTYPES = [infinicore.float16, infinicore.bfloat16, infinicore.float32]
+_TENSOR_DTYPES = [infinicore.float32]
 
 
 def parse_test_cases():
     test_cases = []
     for data in _TEST_CASES_DATA:
-        shape = data[0]
-        in_strides = data[1] if len(data) > 1 else None
-
-        supports_inplace = not is_broadcast(in_strides)
+        shapes = data[0]
 
         for dtype in _TENSOR_DTYPES:
             tol = _TOLERANCE_MAP.get(dtype, {"atol": 0, "rtol": 1e-4})
-            in_spec = TensorSpec.from_tensor(shape, in_strides, dtype)
+            specs = [
+                TensorSpec.from_tensor(shape, None, dtype) for shape in shapes
+            ]
 
             test_cases.append(
                 TestCase(
-                    inputs=[in_spec],
+                    inputs=[tuple(specs)],
                     kwargs={},
-                    output_spec=None,
-                    comparison_target=None,
                     tolerance=tol,
-                    description="fliplr - OUT_OF_PLACE",
+                    description=f"cartesian_prod({len(shapes)} tensors) - OUT_OF_PLACE",
                 )
             )
 
@@ -61,25 +54,25 @@ def parse_test_cases():
 
 
 class OpTest(BaseOperatorTest):
-    """FlipLR operator test with simplified implementation"""
+    """CartesianProd operator test."""
 
     def __init__(self):
-        super().__init__("FlipLR")
+        super().__init__("CartesianProd")
 
     def get_test_cases(self):
         return parse_test_cases()
 
     def torch_operator(self, *args, **kwargs):
-        return torch.fliplr(*args, **kwargs)
+        tensors, = args
+        return torch.cartesian_prod(*tensors)
 
     def infinicore_operator(self, *args, **kwargs):
-        """InfiniCore implementation."""
         import infinicore.nn.functional as F
-        return F.fliplr(*args, **kwargs)
+        tensors, = args
+        return F.cartesian_prod(*tensors)
 
 
 def main():
-    """Main entry point"""
     runner = GenericTestRunner(OpTest)
     runner.run_and_exit()
 

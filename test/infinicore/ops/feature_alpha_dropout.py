@@ -75,9 +75,10 @@ class OpTest(BaseOperatorTest):
     def torch_operator(self, *args, **kwargs):
         return torch.nn.functional.feature_alpha_dropout(*args, **kwargs)
 
-    # def infinicore_operator(self, *args, **kwargs):
-    #     """InfiniCore implementation (operator not yet available)."""
-    #     return infinicore.nn.functional.feature_alpha_dropout(*args, **kwargs)
+    def infinicore_operator(self, *args, **kwargs):
+        """InfiniCore implementation."""
+        import infinicore.nn.functional as F
+        return F.feature_alpha_dropout(*args, **kwargs)
 
 
 def main():
