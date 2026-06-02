@@ -2,7 +2,7 @@ import infinicore
 from infinicore.tensor import Tensor
 
 
-def cartesian_prod(*tensors: Tensor, *, out=None) -> Tensor:
+def cartesian_prod(*tensors: Tensor, out=None) -> Tensor:
     if (
         infinicore.use_ntops
         and tensors[0].device.type in ("cuda", "musa")
