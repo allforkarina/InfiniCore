@@ -45,6 +45,7 @@ from infinicore.dtype import (
     int32,
     int64,
     long,
+    promote_types,
     short,
     uint8,
 )
@@ -185,6 +186,7 @@ __all__ = [
     "int32",
     "int64",
     "long",
+    "promote_types",
     "short",
     "uint8",
     # Operations.
