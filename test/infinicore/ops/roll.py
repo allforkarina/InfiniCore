@@ -10,17 +10,19 @@ from framework import (
     TensorSpec,
     TestCase,
     GenericTestRunner,
-    is_broadcast,
 )
 
 _TEST_CASES_DATA = [
     ((10,), 3, 0, None),
+    ((10,), -2, 0, None),
     ((4, 8), 2, 1, None),
     ((4, 8), 2, 1, (64, 1)),
     ((2, 3, 4), 1, 0, None),
     ((2, 3, 4), 2, 2, None),
+    ((2, 3, 4), -1, -1, None),
     ((16, 64), 8, 0, None),
     ((8, 16, 32), 5, 1, None),
+    ((2, 8, 3), 3, -2, None),
 ]
 
 _TOLERANCE_MAP = {
