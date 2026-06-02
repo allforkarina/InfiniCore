@@ -10,6 +10,21 @@ from framework import (
     TensorSpec,
     TestCase,
     GenericTestRunner,
+    get_args,
+)
+
+_DEVICE_FLAGS = (
+    "cpu",
+    "nvidia",
+    "cambricon",
+    "ascend",
+    "iluvatar",
+    "metax",
+    "moore",
+    "kunlun",
+    "hygon",
+    "qy",
+    "ali",
 )
 
 _TEST_CASES_DATA = [
@@ -74,8 +89,32 @@ class OpTest(BaseOperatorTest):
         return F.roll(*args, **kwargs)
 
 
+def _musa_available():
+    try:
+        import torch_musa  # noqa: F401
+    except ImportError:
+        return False
+
+    return hasattr(torch, "musa") and torch.musa.is_available()
+
+
+def _select_roll_args():
+    args = get_args()
+    if any(getattr(args, flag, False) for flag in _DEVICE_FLAGS):
+        return args
+
+    if torch.cuda.is_available():
+        args.nvidia = True
+        print("No devices specified, defaulting to NVIDIA for ntops-backed roll")
+    elif _musa_available():
+        args.moore = True
+        print("No devices specified, defaulting to Moore for ntops-backed roll")
+
+    return args
+
+
 def main():
-    runner = GenericTestRunner(OpTest)
+    runner = GenericTestRunner(OpTest, args=_select_roll_args())
     runner.run_and_exit()
 
 
