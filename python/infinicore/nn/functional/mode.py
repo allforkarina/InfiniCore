@@ -1,13 +1,16 @@
 import infinicore
-from infinicore.tensor import Tensor
 
 
-def mode(input: Tensor, dim: int = -1, *, out=None) -> Tensor:
-    if infinicore.use_ntops and input.device.type in ("cuda", "musa") and out is None:
-        return infinicore.ntops.torch.mode(input, dim)
+def mode(input, dim=-1, keepdim=False, *, out=None):
+    if out is not None:
+        raise NotImplementedError("mode does not support out= yet")
 
-    if out is None:
-        return Tensor(_infinicore.mode(input._underlying, dim))
+    if keepdim:
+        raise NotImplementedError("mode does not support keepdim yet")
 
-    _infinicore.mode_(out._underlying, input._underlying, dim)
-    return out
+    if not infinicore.use_ntops or input.device.type not in ("cuda", "musa"):
+        raise NotImplementedError(
+            "mode is only available via ntops on CUDA/MUSA devices"
+        )
+
+    return infinicore.ntops.torch.mode(input, dim)
