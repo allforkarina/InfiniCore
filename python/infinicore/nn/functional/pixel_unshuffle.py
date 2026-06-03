@@ -1,17 +1,16 @@
 import infinicore
-from infinicore.tensor import Tensor
 
 
-def pixel_unshuffle(input: Tensor, downscale_factor: int, *, out=None) -> Tensor:
-    if infinicore.use_ntops and input.device.type in ("cuda", "musa") and out is None:
-        return infinicore.ntops.torch.pixel_unshuffle(input, downscale_factor)
-
-    if out is None:
-        return Tensor(
-            _infinicore.pixel_unshuffle(input._underlying, downscale_factor)
+def pixel_unshuffle(input, downscale_factor, *, out=None):
+    if out is not None:
+        raise NotImplementedError(
+            "pixel_unshuffle does not support out= yet"
         )
 
-    _infinicore.pixel_unshuffle_(
-        out._underlying, input._underlying, downscale_factor
-    )
-    return out
+    if not infinicore.use_ntops or input.device.type not in ("cuda", "musa"):
+        raise NotImplementedError(
+            "pixel_unshuffle is only available via ntops "
+            "on CUDA/MUSA devices"
+        )
+
+    return infinicore.ntops.torch.pixel_unshuffle(input, downscale_factor)
