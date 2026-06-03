@@ -45,6 +45,14 @@ _HAND_CRAFTED = [
         ),
         0,
     ),
+    (
+        "large_2d_dim-1",
+        torch.tensor(
+            [[0] * 12 + [1] * 12 + [2] * 8],
+            dtype=torch.float32,
+        ),
+        -1,
+    ),
 ]
 
 _RANDOM_CASES = [
@@ -53,7 +61,6 @@ _RANDOM_CASES = [
     ((2, 3, 4), -1),
     ((5, 7), 1),
     ((3, 8, 6), 1),
-    ((16, 32), -1),
 ]
 
 _STRIDE_CASES = [
