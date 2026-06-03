@@ -1,13 +1,13 @@
 import infinicore
-from infinicore.tensor import Tensor
 
 
-def fliplr(input: Tensor, *, out=None) -> Tensor:
-    if infinicore.use_ntops and input.device.type in ("cuda", "musa") and out is None:
-        return infinicore.ntops.torch.fliplr(input)
+def fliplr(input, *, out=None):
+    if out is not None:
+        raise NotImplementedError("fliplr does not support out= yet")
 
-    if out is None:
-        return Tensor(_infinicore.fliplr(input._underlying))
+    if not infinicore.use_ntops or input.device.type not in ("cuda", "musa"):
+        raise NotImplementedError(
+            "fliplr is only available via ntops on CUDA/MUSA devices"
+        )
 
-    _infinicore.fliplr_(out._underlying, input._underlying)
-    return out
+    return infinicore.ntops.torch.fliplr(input)

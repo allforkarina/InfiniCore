@@ -1,13 +1,13 @@
 import infinicore
-from infinicore.tensor import Tensor
 
 
-def flip(input: Tensor, dims, *, out=None) -> Tensor:
-    if infinicore.use_ntops and input.device.type in ("cuda", "musa") and out is None:
-        return infinicore.ntops.torch.flip(input, dims)
+def flip(input, dims, *, out=None):
+    if out is not None:
+        raise NotImplementedError("flip does not support out= yet")
 
-    if out is None:
-        return Tensor(_infinicore.flip(input._underlying, dims))
+    if not infinicore.use_ntops or input.device.type not in ("cuda", "musa"):
+        raise NotImplementedError(
+            "flip is only available via ntops on CUDA/MUSA devices"
+        )
 
-    _infinicore.flip_(out._underlying, input._underlying, dims)
-    return out
+    return infinicore.ntops.torch.flip(input, dims)
