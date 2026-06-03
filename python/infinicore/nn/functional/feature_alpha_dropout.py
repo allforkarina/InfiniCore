@@ -1,19 +1,16 @@
 import infinicore
-from infinicore.tensor import Tensor
 
 
-def feature_alpha_dropout(
-    input: Tensor, p: float = 0.5, training: bool = True, *, out=None
-) -> Tensor:
-    if infinicore.use_ntops and input.device.type in ("cuda", "musa") and out is None:
-        return infinicore.ntops.torch.feature_alpha_dropout(input, p, training)
-
-    if out is None:
-        return Tensor(
-            _infinicore.feature_alpha_dropout(input._underlying, p, training)
+def feature_alpha_dropout(input, p=0.5, training=False, *, out=None):
+    if out is not None:
+        raise NotImplementedError(
+            "feature_alpha_dropout does not support out= yet"
         )
 
-    _infinicore.feature_alpha_dropout_(
-        out._underlying, input._underlying, p, training
-    )
-    return out
+    if not infinicore.use_ntops or input.device.type not in ("cuda", "musa"):
+        raise NotImplementedError(
+            "feature_alpha_dropout is only available via ntops "
+            "on CUDA/MUSA devices"
+        )
+
+    return infinicore.ntops.torch.feature_alpha_dropout(input, p, training)
