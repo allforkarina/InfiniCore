@@ -13,12 +13,11 @@ from framework import (
 )
 
 _TEST_CASES_DATA = [
-    ([(3,), (4,)],),
-    ([(2,), (5,)],),
-    ([(3,), (3,), (3,)],),
-    ([(4,), (6,)],),
-    ([(2,), (2,), (2,)],),
-    ([(5,), (8,)],),
+    ([(2,), (3,)]),
+    ([(4,), (2,), (3,)]),
+    ([(3,), (5,)]),
+    ([(5,)]),
+    ([(2,), (2,), (2,)]),
 ]
 
 _TOLERANCE_MAP = {
@@ -27,14 +26,12 @@ _TOLERANCE_MAP = {
     infinicore.bfloat16: {"atol": 0, "rtol": 5e-2},
 }
 
-_TENSOR_DTYPES = [infinicore.float32]
+_TENSOR_DTYPES = [infinicore.float16, infinicore.bfloat16, infinicore.float32]
 
 
 def parse_test_cases():
     test_cases = []
-    for data in _TEST_CASES_DATA:
-        shapes = data[0]
-
+    for shapes in _TEST_CASES_DATA:
         for dtype in _TENSOR_DTYPES:
             tol = _TOLERANCE_MAP.get(dtype, {"atol": 0, "rtol": 1e-4})
             specs = [
@@ -46,7 +43,10 @@ def parse_test_cases():
                     inputs=[tuple(specs)],
                     kwargs={},
                     tolerance=tol,
-                    description=f"cartesian_prod({len(shapes)} tensors) - OUT_OF_PLACE",
+                    output_count=1,
+                    description=(
+                        f"cartesian_prod({len(shapes)} tensors)"
+                    ),
                 )
             )
 
@@ -68,6 +68,7 @@ class OpTest(BaseOperatorTest):
 
     def infinicore_operator(self, *args, **kwargs):
         import infinicore.nn.functional as F
+
         tensors, = args
         return F.cartesian_prod(*tensors)
 

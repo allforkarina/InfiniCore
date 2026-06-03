@@ -1,21 +1,13 @@
 import infinicore
-from infinicore.tensor import Tensor
 
 
-def cartesian_prod(*tensors: Tensor, out=None) -> Tensor:
-    if (
-        infinicore.use_ntops
-        and tensors[0].device.type in ("cuda", "musa")
-        and out is None
-    ):
-        return infinicore.ntops.torch.cartesian_prod(*tensors)
+def cartesian_prod(*tensors, out=None):
+    if out is not None:
+        raise NotImplementedError("cartesian_prod does not support out= yet")
 
-    if out is None:
-        return Tensor(
-            _infinicore.cartesian_prod([t._underlying for t in tensors])
+    if not infinicore.use_ntops or tensors[0].device.type not in ("cuda", "musa"):
+        raise NotImplementedError(
+            "cartesian_prod is only available via ntops on CUDA/MUSA devices"
         )
 
-    _infinicore.cartesian_prod_(
-        out._underlying, [t._underlying for t in tensors]
-    )
-    return out
+    return infinicore.ntops.torch.cartesian_prod(*tensors)
