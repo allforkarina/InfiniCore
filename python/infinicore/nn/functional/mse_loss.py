@@ -1,19 +1,13 @@
 import infinicore
-from infinicore.tensor import Tensor
 
 
-def mse_loss(
-    input: Tensor, target: Tensor, reduction: str = "mean", *, out=None
-) -> Tensor:
-    if infinicore.use_ntops and input.device.type in ("cuda", "musa") and out is None:
-        return infinicore.ntops.torch.mse_loss(input, target, reduction)
+def mse_loss(input, target, reduction="mean", *, out=None):
+    if out is not None:
+        raise NotImplementedError("mse_loss does not support out= yet")
 
-    if out is None:
-        return Tensor(
-            _infinicore.mse_loss(input._underlying, target._underlying, reduction)
+    if not infinicore.use_ntops or input.device.type not in ("cuda", "musa"):
+        raise NotImplementedError(
+            "mse_loss is only available via ntops on CUDA/MUSA devices"
         )
 
-    _infinicore.mse_loss_(
-        out._underlying, input._underlying, target._underlying, reduction
-    )
-    return out
+    return infinicore.ntops.torch.mse_loss(input, target, reduction)

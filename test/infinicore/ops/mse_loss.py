@@ -7,9 +7,6 @@ import infinicore
 import torch
 from framework import BaseOperatorTest, TensorSpec, TestCase, GenericTestRunner
 
-# Test cases format: (input_shape, target_shape, input_strides_or_None, reduction_or_None)
-# infinicore.nn.functional.mse_loss(input, target, reduction='mean')
-
 _TEST_CASES_DATA = [
     ((4, 5), (4, 5), None, None),
     ((8, 8), (8, 8), (512, 64), "sum"),
@@ -20,17 +17,12 @@ _TEST_CASES_DATA = [
 ]
 
 _TOLERANCE_MAP = {
-    # infinicore.float16: {"atol": 1e-3, "rtol": 1e-2},
+    infinicore.float16: {"atol": 1e-2, "rtol": 1e-2},
     infinicore.float32: {"atol": 1e-5, "rtol": 1e-4},
-    # infinicore.bfloat16: {"atol": 1e-2, "rtol": 5e-2},
+    infinicore.bfloat16: {"atol": 1e-2, "rtol": 5e-2},
 }
 
-_TENSOR_DTYPES = [
-    # infinicore.float16,
-    # some pytorch version doesn't support bfloat16
-    # infinicore.bfloat16,
-    infinicore.float32,
-]
+_TENSOR_DTYPES = [infinicore.float16, infinicore.bfloat16, infinicore.float32]
 
 
 def parse_test_cases():
@@ -60,7 +52,7 @@ def parse_test_cases():
 
 
 class OpTest(BaseOperatorTest):
-    """mse_loss operator test with simplified implementation"""
+    """mse_loss operator test."""
 
     def __init__(self):
         super().__init__("mse_loss")
@@ -72,13 +64,11 @@ class OpTest(BaseOperatorTest):
         return torch.nn.functional.mse_loss(*args, **kwargs)
 
     def infinicore_operator(self, *args, **kwargs):
-        """InfiniCore implementation."""
         import infinicore.nn.functional as F
         return F.mse_loss(*args, **kwargs)
 
 
 def main():
-    """Main entry point"""
     runner = GenericTestRunner(OpTest)
     runner.run_and_exit()
 
