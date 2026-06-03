@@ -15,10 +15,8 @@ from framework import (
 _TEST_CASES_DATA = [
     ([(4,), (6,)], "ij"),
     ([(3,), (5,), (7,)], "ij"),
-    ([(4,), (6,)], "xy"),
     ([(8,), (8,)], "ij"),
     ([(2,), (3,), (4,)], "ij"),
-    ([(5,), (10,)], "xy"),
 ]
 
 _TOLERANCE_MAP = {
@@ -27,7 +25,7 @@ _TOLERANCE_MAP = {
     infinicore.bfloat16: {"atol": 0, "rtol": 5e-2},
 }
 
-_TENSOR_DTYPES = [infinicore.float32]
+_TENSOR_DTYPES = [infinicore.float16, infinicore.bfloat16, infinicore.float32]
 
 
 def parse_test_cases():
@@ -46,7 +44,10 @@ def parse_test_cases():
                     kwargs=kwargs,
                     tolerance=tol,
                     output_count=len(shapes),
-                    description=f"meshgrid({len(shapes)} tensors, indexing='{indexing}')",
+                    description=(
+                        f"meshgrid({len(shapes)} tensors, "
+                        f"indexing='{indexing}')"
+                    ),
                 )
             )
 
@@ -69,6 +70,7 @@ class OpTest(BaseOperatorTest):
 
     def infinicore_operator(self, *args, **kwargs):
         import infinicore.nn.functional as F
+
         tensors, = args
         indexing = kwargs.get("indexing", "ij")
         return F.meshgrid(*tensors, indexing=indexing)

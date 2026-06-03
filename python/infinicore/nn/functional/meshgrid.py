@@ -1,14 +1,13 @@
 import infinicore
-from infinicore.tensor import Tensor
 
 
-def meshgrid(*tensors: Tensor, indexing: str = "ij") -> tuple[Tensor, ...]:
-    if infinicore.use_ntops and tensors[0].device.type in ("cuda", "musa"):
-        return infinicore.ntops.torch.meshgrid(*tensors, indexing=indexing)
+def meshgrid(*tensors, indexing="ij"):
+    if indexing != "ij":
+        raise NotImplementedError("meshgrid only supports indexing='ij'")
 
-    return tuple(
-        Tensor(t)
-        for t in _infinicore.meshgrid(
-            [t._underlying for t in tensors], indexing
+    if not infinicore.use_ntops or tensors[0].device.type not in ("cuda", "musa"):
+        raise NotImplementedError(
+            "meshgrid is only available via ntops on CUDA/MUSA devices"
         )
-    )
+
+    return infinicore.ntops.torch.meshgrid(*tensors, indexing=indexing)
